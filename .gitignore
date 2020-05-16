@@ -1,0 +1,9 @@
+# Visual Studio Community 2019 ฐüทร
+
+.vs/
+Debug/
+
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
