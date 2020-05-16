@@ -10,8 +10,8 @@ int FlatShaded = 0;
 int WireFramed = 0;
 // 마우스 움직임에 따라 시점을 바꾸기 위한 변수
 // 카메라 위치를 이동 (X, Z 좌표계에서 카메라 원형으로 회전)
-GLfloat ViewX = 0, ViewZ = 1;
-GLfloat ViewY = 0;
+GLfloat ViewX = 0.4025, ViewZ = 0.8922;
+GLfloat ViewY = -0.2050;
 GLfloat prevViewX, prevViewY, prevViewZ;
 GLint windowWidth = 400, windowHeight = 400;
 
@@ -88,7 +88,7 @@ void MyKeyboard(unsigned char key, int x, int y) {
 	case '\033': // esc key
 		exit(0);
 		break;
-	case 's':
+	case 's': case 'S':
 		if (FlatShaded) {
 			FlatShaded = 0;
 			glShadeModel(GL_SMOOTH);
@@ -101,7 +101,7 @@ void MyKeyboard(unsigned char key, int x, int y) {
 		break;
 		// 여기에 와이어 프레임 토글링을 위한 코드를 삽입할 것
 		// 위의 전역 변수 WireFramed를 사용할 것
-	case 'w':
+	case 'w': case 'W':
 		if (WireFramed) {
 			WireFramed = 0;
 		}
