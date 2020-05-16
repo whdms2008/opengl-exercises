@@ -153,7 +153,7 @@ void MyDisplay() {
 	// 아래에 필요함 물체 드로잉 명령을 삽입할 것
 
 
-	glFrontFace(GL_CW); // glut Object 그릴 때는 CW 로 해야 제대로 돌아감
+	
 
 	// glutSolidTeapot만을 이용해서 Wire, Solid 모두 표현할 수 있도록 하기 - 교재 P423, 424 참조함
 	if (WireFramed) {
@@ -165,8 +165,23 @@ void MyDisplay() {
 		glCullFace(GL_BACK);
 	}
 
-	glutSolidTeapot(0.15); // 예시
+	glFrontFace(GL_CW);
+	// 도넛
+	glPushMatrix();
+	glTranslatef(-0.3, -0.04, +0.25);
+	glRotatef(90, 1, 0, 0);
 
+	glutSolidTorus(0.06, 0.15, 10, 10);
+	glPopMatrix();
+
+	// 주전자
+	glPushMatrix();
+	glTranslatef(+0.3, 0, +0.25);
+
+	glutSolidTeapot(0.15);
+	glPopMatrix();
+
+	// 탁자
 	glFrontFace(GL_CCW); // 내 정점 배열 그림은 CCW 로 설정
 	glVertexPointer(3, GL_FLOAT, 0, top_of_table);
 	for (GLint i = 0; i < 6; ++i) {
