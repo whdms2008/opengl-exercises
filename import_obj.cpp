@@ -52,42 +52,14 @@ int listID;
 
 void display(void){
 	glClear(GL_COLOR_BUFFER_BIT);
-	/*glFrontFace(GL_CCW);
-	glEnable(GL_CULL_FACE);*/
-
-	printf("%d\n", vlist_size);
 
 	glViewport(0, 0, 500, 500);
 	glPushMatrix();
 	glTranslatef(13, 0, 0);
-	//glRotatef(60, 0, 0, 0);
+
 	glCallList(listID);
 	glPopMatrix();
-	/*
-	for (int i = 0; i < vertex_info_size; ++i) { // 색상 임의로 지정
-		color_info[i][0] = 0.0;
-		color_info[i][1] = 0.0;
-		color_info[i][2] = 0.0;
-	}
-	
-	glEnableClientState(GL_COLOR_ARRAY);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	
-	glColorPointer(3, GL_FLOAT, 0, color_info);
-	glVertexPointer(3, GL_FLOAT, 0, vertex_info);
 
-	glLoadIdentity();
-
-	
-	glPushMatrix();
-
-	glRotatef(-30, 0, 0, 0);
-	glScalef(0.5, 0.5, 0.5);
-	for (GLint i = 0; i < vlist_size; ++i) {
-		glDrawElements(GL_POLYGON, 3, GL_UNSIGNED_INT, vlist[i]);
-	}
-	glPopMatrix();
-	*/
 	glFlush();
 }
 
