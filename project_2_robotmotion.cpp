@@ -1,4 +1,4 @@
-// 2015312229 Yoseob Kim HW5, Project II ModelView
+// 2015312229 Yoseob Kim HW5, Project II Robot Motion
 #include<windows.h>
 #include<MMSystem.h> // 소리 재생을 위한 헤더
 #include<GL/glut.h>
