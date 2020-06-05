@@ -1,4 +1,6 @@
 // 2015312229 Yoseob Kim HW5, Project II Robot Motion
+// Base Code는 다음의 위치에서 참조:
+// 주우석,「OpenGL로 배우는 3차원 컴퓨터 그래픽스」, 한빛아카데미(2020), p302~318.
 #include<windows.h>
 #include<MMSystem.h> // 소리 재생을 위한 헤더
 #include<GL/glut.h>
@@ -11,6 +13,7 @@ static double time2 = 0; // Jap_time 변수
 static double time3 = 0; // Rocket_time 변수
 static double time4 = 0; // ground_time 변수
 static double time6 = 0; // exit_time 변수
+
 static double time7 = 0; // ** 추가 항목
 
 GLfloat R_Arm_x = 0; // 오른쪽 어깨
@@ -37,8 +40,9 @@ static int key = 0;  // 동작 모드와 색상 변경 변수
 #define JAP		 2							
 #define ROCKET	 3	
 #define YUNA	 4	
-#define EXIT	 6	
-#define STRETCH  7
+#define EXIT	 6
+
+#define STRETCH  7 // ** 추가 항목
 
 void glInit(void) { // 지엘 초기화 함수 
 	glEnable(GL_DEPTH_TEST); // 깊이 테스팅 사용
@@ -670,7 +674,7 @@ void Rocket() {
 
 
 /*
-** 추가 항목: 달리면서 팔을 스트레칭 하는 동작(뒤로 두 바퀴, 앞으로 두 바퀴)
+** 추가 항목: 달리면서 팔을 스트레칭 하는 동작(뒤로 두 바퀴, 앞으로 두 바퀴를 반복)
 */
 void Stretch() {
 
@@ -707,7 +711,7 @@ void Stretch() {
 	glRotatef(sin(time) * 30, 0, 0, 1); //로봇의 좌,우 반동 표현(좌우로 30도 만큼 주기적인 움직임 설정)
 
 	float k = 0;
-	k = abs(long(sin(time7) * 0.03)); // k값 설정
+	k = abs(long(sin(time7) * 0.03)); //k값 설정
 
 	glPushMatrix(); //처음 저장 좌표 다시 저장
 	glTranslatef(0.0, k, 0); //변수 k만큼 로봇의 몸체가 y축 기준으로 움직임.
@@ -795,11 +799,14 @@ void MyMainMenu(int entryID) { //메뉴
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);//초기화
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);//디스플레이 모드 설정
+
 	glutInitWindowSize(650, 650);//윈도우 크기 설정 -> 값 수정 (모니터가 작아서 윈도우 크기 수정함)
 	glutInitWindowPosition(0, 0);//윈도우 초기 위치 설정
+
 	glutCreateWindow("Robot Motion Samples - Modified by Yoseob Kim, 2015312229");//윈도우 생성
 	glInit(); // 조명 초기화
 	//InitLight1();
+
 	GLint MyMainMenuID = glutCreateMenu(MyMainMenu);//메뉴추가
 	glutAddMenuEntry("RUN", 1);//로봇이 달리는 모션 메뉴 추가
 	glutAddMenuEntry("JAP", 2);//로봇이 잽날리는 모션 메뉴 추가
@@ -808,8 +815,10 @@ int main(int argc, char** argv) {
 	glutAddMenuEntry("STOP", 5);//로봇이 하는 일을 멈추게 하는 메뉴 추가
 	glutAddMenuEntry("STRETCH", 7); // ** 추가 항목
 	glutAttachMenu(GLUT_RIGHT_BUTTON);//오른쪽마우스클릭시메뉴팝업
+
 	glutKeyboardFunc(MyKeyboard); //키보드 콜백
 	glutTimerFunc(40, MyTimer, 1); //타이머 함수
+
 	glutDisplayFunc(MyDisplay); //디스플레이
 	glutMainLoop();
 	return 0;
