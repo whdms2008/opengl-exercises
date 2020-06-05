@@ -1,27 +1,6 @@
-#/*
-본 프로젝트는 소스코드만으로 실행이 가능하다.
-그러나 음악 재생은 별도로 c:\ 경로에 음악파일이 필요하다.
-
-이 프로젝트는 안드로이드 로봇이 나와서 4가지 동작을 한다.
-실행방법은 오른쪽 마우스로 클릭하면 5가지 메뉴가 나온다.
-첫번째는 로봇이 달리는 동작으로서 메뉴에는 'RUN' 라 표시된다.
-두번째는 로봇이 잽을 날리는 동작으로서 메뉴에는 'JAP'이라 표시된다.
-세번째는 로봇이 로켓 펀치을 날리는 동작으로서 메뉴에는 'PUNCH'이라 표시된다.
-네번째는 로봇이 피겨스케이팅 동작으로서 메뉴에는 'SKATE'라고 표시된다.
-다섯번째는 'STOP' 메뉴로서 음악파일을 같이 실행시엔 메뉴별로 다른 음악이
-나오게 하기 위해서 이 메뉴를 이용하여 현재 나오는 음악과 행동을 중지시킬 수 있다.
-
-키보드의 'q'버튼을 누르면 종료 이미지가 나온다.
-키보드의 'w'버튼을 누르면 wire 이미지로 전환시키고,
-키보드의 's'버튼을 누르면 solid 이미지로 전환시킨다.
-*/
-
-/*
-필수적인 헤더 파일들
-*/
-
+// 2015312229 Yoseob Kim HW5, Project II ModelView
 #include<windows.h>
-#include<MMSystem.h>
+#include<MMSystem.h> // 소리 재생을 위한 헤더
 #include<GL/glut.h>
 #include<GL/gl.h>
 #include<GL/glu.h>
@@ -32,6 +11,7 @@ static double time2 = 0; // Jap_time 변수
 static double time3 = 0; // Rocket_time 변수
 static double time4 = 0; // ground_time 변수
 static double time6 = 0; // exit_time 변수
+static double time7 = 0; // ** 추가 항목
 
 GLfloat R_Arm_x = 0; // 오른쪽 어깨
 GLfloat R_Arm_y = 0; // 오른쪽 팔
@@ -53,11 +33,12 @@ int c = 0; // z축 기준(값이 1일 때 z축을 기준으로 회전)
 static int flag = 0; // wireframe 모드와 solid rendering 모드 구분 변수
 static int key = 0;  // 동작 모드와 색상 변경 변수
 
-#define RUN		1					
-#define JAP		2							
-#define ROCKET	3	
-#define YUNA	4	
-#define EXIT	6	
+#define RUN		 1					
+#define JAP		 2							
+#define ROCKET	 3	
+#define YUNA	 4	
+#define EXIT	 6	
+#define STRETCH  7
 
 void glInit(void) { // 지엘 초기화 함수 
 	glEnable(GL_DEPTH_TEST); // 깊이 테스팅 사용
@@ -145,6 +126,9 @@ void Draw_Color(int i) { // 색상을 그리는 함수
 	}
 	else if (i == EXIT) {
 		glColor3f(0.2, 0.2, 0.2);
+	}
+	else if (i == STRETCH) {
+		glColor3f(0.8, 0.8, 1.0);
 	}
 }
 
@@ -684,6 +668,55 @@ void Rocket() {
 	glutSwapBuffers();
 }
 
+
+/*
+** 추가 항목: 달리면서 팔을 스트레칭 하는 동작(뒤로 두 바퀴, 앞으로 두 바퀴)
+*/
+void Stretch() {
+
+	sndPlaySound(TEXT("C:\\셀바이뮤직-hiro-out.wav"), SND_ASYNC | SND_NOSTOP);
+	/*	음악의 크레딧 - 아래의 주소에서 다운로드 받음
+		hiro - out by 셀바이뮤직
+
+		Download / Stream
+		- https://www.sellbuymusic.com/musicDetail/9200
+	*/
+	glLoadIdentity();//CTM 초기화
+					 /*
+					 로봇의 기본적인 관절의 움직임 범위를 제한하는 곳
+					 */
+	L_Arm_x = sin(0.1 * time7) * 360; //왼쪽 어깨를 sin()함수를 사용하여 한 바퀴씩 돌려주는 주기적인 움직임 설정
+	R_Arm_x =  L_Arm_x;      //우측 어깨를 왼쪽 어깨 움직임의 반대로 설정
+	R_Arm_y = -50 - abs(long(cos(0.1 * time7)));  //우측 팔뚝 각도 조절(팔뚝을 앞으로 조금 구부림)
+	L_Arm_y = -50 - abs(long(-cos(0.1 * time7))); //좌측 팔뚝 각도 조절(팔뚝을 앞으로 조금 구부리고, 우측 팔뚝과 cos() 결과 값을 반대로 설정)
+
+	R_Leg_y = abs(long(-sin(time)) * 30 + 50);  //우측 종아리 각도 조절(발랄하게 뛰어가는 동작)
+	L_Leg_y = abs(long(sin(time)) * 30 + 50);   //좌측 종아리 각도 조절(발랄하게 뛰어가는 동작 구현, 좌측 종아리와 sin() 결과 값을 반대로 설정)
+	R_Leg_x = sin(time) * 60;         //우측 다리는 60도까지 주기적으로 움직임
+	L_Leg_x = -R_Leg_x;               //좌측 다리는 60도까지 주기적으로 움직이고, 우측 다리와 반대로 움직임
+
+	cyl = gluNewQuadric(); //실린더 객체 생성
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //초기화
+	glMatrixMode(GL_MODELVIEW); //모드 설정
+
+	DrawGround(); //지면 호출
+	glLoadIdentity(); //CTM 초기화
+
+	glRotatef(-230.0, 0, 1, 0); //y축 기준으로 기울임
+
+	glRotatef(sin(time) * 30, 0, 0, 1); //로봇의 좌,우 반동 표현(좌우로 30도 만큼 주기적인 움직임 설정)
+
+	float k = 0;
+	k = abs(long(sin(time7) * 0.03)); // k값 설정
+
+	glPushMatrix(); //처음 저장 좌표 다시 저장
+	glTranslatef(0.0, k, 0); //변수 k만큼 로봇의 몸체가 y축 기준으로 움직임.
+	glTranslatef(0.0, 0.5, 0.0); //최초 위치 
+
+	DrawAndroid();
+	glutSwapBuffers();
+}
+
 /*
 키보드 콜백 설정 함수
 w를 누르면 wire 모드로, s를 누르면 solid 모드로, q를 누르면 종료를 표현
@@ -733,6 +766,10 @@ void MyDisplay() {
 		ex();
 		glPopMatrix();
 	}
+	else if (key == STRETCH) {
+		Stretch();
+		glPopMatrix();
+	}
 }
 /*
 타이머 함수
@@ -743,6 +780,7 @@ void MyTimer(int Value) {
 	time2 = time2 + 0.5;//잽을 날릴때 쓰인 타이머 변수
 	time3 = time3 + 0.01;//로켓을 날릴때 쓰인 타이머 번수, 종료시 로봇이 뱅글뱅글 돌아가게 하기 위해 쓰인 타이머 변수
 	time4 = time4 + 1.0;//김연아 선수 모션을 취할때 쓰인 타이머 변수
+	time7 = time7 + 0.4; // ** 추가 동작을 위한 타이머 변수
 	glutPostRedisplay();
 	glutTimerFunc(40, MyTimer, 1);
 }
@@ -757,17 +795,18 @@ void MyMainMenu(int entryID) { //메뉴
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);//초기화
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);//디스플레이 모드 설정
-	glutInitWindowSize(800, 800);//윈도우 크기 설정
+	glutInitWindowSize(650, 650);//윈도우 크기 설정 -> 값 수정 (모니터가 작아서 윈도우 크기 수정함)
 	glutInitWindowPosition(0, 0);//윈도우 초기 위치 설정
-	glutCreateWindow("Robot Motion Samples");//윈도우 생성
-											 //glInit(); // 조명 초기화
-	InitLight1();
+	glutCreateWindow("Robot Motion Samples - Modified by Yoseob Kim, 2015312229");//윈도우 생성
+	glInit(); // 조명 초기화
+	//InitLight1();
 	GLint MyMainMenuID = glutCreateMenu(MyMainMenu);//메뉴추가
 	glutAddMenuEntry("RUN", 1);//로봇이 달리는 모션 메뉴 추가
 	glutAddMenuEntry("JAP", 2);//로봇이 잽날리는 모션 메뉴 추가
 	glutAddMenuEntry("PUNCH", 3);//로봇이 로켓펀치를 날리는 모션 메뉴 추가
 	glutAddMenuEntry("SKATE", 4);//로봇이 피겨스케이팅하는 모션 메뉴 추가
 	glutAddMenuEntry("STOP", 5);//로봇이 하는 일을 멈추게 하는 메뉴 추가
+	glutAddMenuEntry("STRETCH", 7); // ** 추가 항목
 	glutAttachMenu(GLUT_RIGHT_BUTTON);//오른쪽마우스클릭시메뉴팝업
 	glutKeyboardFunc(MyKeyboard); //키보드 콜백
 	glutTimerFunc(40, MyTimer, 1); //타이머 함수
