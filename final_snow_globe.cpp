@@ -1,8 +1,5 @@
-// SKKU Computer Graphics (COM3013) - Project Modeling 1
+// SKKU Computer Graphics (COM3013) - Final Project : Snow Globe
 // 2015312229 Yoseob Kim
-
-// ** 이번 프로젝트를 통해 익힌 기술들:
-// Vertex lists, Display list, 모델 변환, 시점 변환, WireFrame, 외부 모델링 데이터(.obj file) import
 
 #define _CRT_SECURE_NO_WARNINGS // fscanf, fgets 사용을 위해 경고 무시하기 (Visual Studio 환경이 아닌 경우 코드를 삭제할 것)
 
@@ -15,24 +12,38 @@
 // C++ headers
 #include <iostream>
 #include <iomanip> // 콘솔 출력 (디버깅 용도)에서의 부동 소수점 정밀도를 위한 헤더 파일
+#include <ctime>
 
 // tinkercad로 그린 눈송이 -> .obj 데이터 파싱 후 정점 배열로 변환
-GLuint vlist[700][3]; // GLubyte의 최대 범위인 255개를 넘어가기 때문에 GLuint로 설정
+
+GLuint vlist[60000][3]; // GLubyte의 최대 범위인 255개를 넘어가기 때문에 GLuint로 설정
 GLint vlist_size, vertex_info_size;
-GLfloat vertex_info[400][3];
-GLfloat color_info[400][3];
+GLfloat vertex_info[30000][3];
+GLfloat color_info[30000][3];
 
 int snowflakeID; // 정보가 많아 display list로 처리, 해당 리스트의 ID
+int treeupID, treedownID;
 
-void CreateList() { // .obj 파일에서 파싱해 온 정점 배열을 이용해 디스플레이 리스트 생성
-	snowflakeID = glGenLists(1);
-	glNewList(snowflakeID, GL_COMPILE);
+int id_array[10];
+
+void CreateList(int param) { // .obj 파일에서 파싱해 온 정점 배열을 이용해 디스플레이 리스트 생성
+	id_array[param-1] = glGenLists(param);
+	glNewList(id_array[param - 1], GL_COMPILE);
+
 	for (int i = 0; i < vlist_size; ++i) {
 		// 기본 아이디어: 무수히 많은 삼각형 면을 이용하여 하나의 완성된 3D object를 그린다.
 		glBegin(GL_TRIANGLES); // 이를 이용하기 위한 GL_TRIANGLES
 
-		glColor3f(0, 0, 0); // 색상은 하얀 색으로 초기화 (특별한 의미 없음)
-
+		if (param == 1) {
+			glColor3f(1.0, 1.0, 1.0); // 색상은 하얀 색으로 초기화 (특별한 의미 없음)
+		}
+		else if (param == 2) {
+			glColor3f(0.0, 0.5, 0.0);
+		}
+		else if (param == 3) {
+			glColor3f(0.5, 0.0, 0.0);
+		}
+		
 		// 정점 배열의 index를 활용하여 하나의 삼각형의 세 점을 구성 (k=0~2 라 할 때, vlist[i][k] 가 하나의 vertex 정보를 표현)
 		// u=현재의 점이라 할 때, vertex_info[u][0~2] 는 한 점의 x, y, z 값으로 구성
 		glVertex3f(vertex_info[vlist[i][0]][0], vertex_info[vlist[i][0]][1], vertex_info[vlist[i][0]][2]);
@@ -58,6 +69,7 @@ void loadObject(const char* path) {
 	printf("Loading OBJ file %s...\n", path);
 
 	FILE* file = fopen(path, "r");
+	vlist_size = vertex_info_size = 0;
 
 	while (true) {
 		char lineHeader[128];
@@ -99,41 +111,14 @@ int WireFramed = 0;
 
 // 마우스 움직임에 따라 시점을 바꾸기 위한 변수
 // 카메라 위치를 이동 (X, Z 좌표계에서 카메라 원형으로 회전)
-GLfloat ViewX = -0.2700, ViewZ = 0.9320;
-GLfloat ViewY = -0.2420;
+GLfloat ViewX = 0, ViewZ = 1;
+GLfloat ViewY = 0;
 // 초기에 설정한 값은, 디버깅을 위해 콘솔에 출력하던 ViewX~Z를 참고하여 가장 보기 좋은 각도를 기준으로 설정
 // : 이렇게 하면 실행 시 가장 보기 좋은 각도로 모든 물체들이 나타난다.
 GLfloat prevViewX, prevViewY, prevViewZ;
 
 // 윈도우 사이즈
-GLint windowWidth = 500, windowHeight = 500;
-
-void InitLight() { // 광원에 대한 함수 (from base code)
-	GLfloat mat_diffuse[] = { 0.5, 0.35, 0.3, 1.0 };
-	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat mat_ambient[] = { 0.5, 0.35, 0.3, 1.0 };
-	GLfloat mat_shininess[] = { 15.0 };
-
-	GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat light_diffuse[] = { 0.8, 0.8, 0.8, 1.0 };
-	GLfloat light_ambient[] = { 0.3, 0.3, 0.3, 1.0 };
-	GLfloat light_position[] = { -3, 6, 3.0, 0.0 };
-
-	glShadeModel(GL_SMOOTH);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
-
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
-	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-}
+GLint windowWidth = 800, windowHeight = 600;
 
 GLboolean isClicked = false; // 마우스 클릭 여부를 판단
 
@@ -228,6 +213,8 @@ GLfloat table_leg4[8][3] = { {-tableSize, tableLowerPos, -tableSize + legSize}, 
 								{0x86 / 255.0, 0x8e / 255.0, 0x96 / 255.0}, {0x49 / 255.0, 0x50 / 255.0, 0x57 / 255.0}, {0x34 / 255.0, 0x3a / 255.0, 0x40 / 255.0}, {0x21 / 255.0, 0x25 / 255.0, 0x29 / 255.0} };*/
 GLubyte table_vlist[][4] = { {0, 4, 5, 1}, {1, 5, 6, 2}, {4, 7, 6, 5}, {0, 1, 2, 3}, {7, 3, 2, 6}, {4, 0, 3, 7} }; // 교재와 조금 다름 (내 그림은 윗면 - 아랫면 순)
 
+
+GLint snowpos[30][3];
 void MyDisplay() {
 	glViewport(0, 0, windowWidth, windowHeight);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -244,145 +231,42 @@ void MyDisplay() {
 	gluLookAt(0, 0, 0, ViewX, ViewY, ViewZ, 0, 1, 0);
 
 
-	// 마우스 좌표 변환한 정보를 콘솔 창에 출력 (디버깅을 위한 용도)
-	std::cout << std::fixed;
-	std::cout << std::setprecision(4) << "ViewX(x-z plane): " << ViewX << "\tViewZ(x-z plane): " << ViewZ << "\tViewY(height): " << ViewY << std::endl;
-
-
-	// glutSolidTeapot만을 이용해서 Wire, Solid 모두 표현할 수 있도록 하기 - 교재 P423, 424 참조함
-	if (WireFramed) {
-		glPolygonMode(GL_FRONT, GL_FILL);
-		glPolygonMode(GL_BACK, GL_LINE);
-		glCullFace(GL_FRONT);
-	}
-	else {
-		glCullFace(GL_BACK);
+	// 눈 송이 30개 호출
+	for (int i = 0; i < 30; ++i) {
+		glPushMatrix();
+		glScalef(0.004, 0.004, 0.004);
+		glTranslatef(snowpos[i][0], snowpos[i][1], snowpos[i][2]);
+		glCallList(id_array[0]);
+		glPopMatrix();
 	}
 
-	// ** 그리기 동작 1: GLUT 기본 제공 물체 - 도넛, 주전자
-	/*
-	glFrontFace(GL_CW);
-
-	// 도넛
+	// 나무 그리기
 	glPushMatrix();
-	glTranslatef(-0.3, -0.04, +0.25);
-	glRotatef(90, 1, 0, 0);
+	glScalef(0.04, 0.04, 0.04);
+	glTranslatef(8, 3, 0);
+	glCallList(id_array[1]);
 
-	glutSolidTorus(0.06, 0.15, 10, 10);
+	// 계층 구조 모델링
+	glPushMatrix();
+	//glTranslatef()
+	glCallList(id_array[2]);
 	glPopMatrix();
 
-	// 주전자
-	glPushMatrix();
-	glTranslatef(+0.3, 0, +0.25);
-
-	glutSolidTeapot(0.15);
 	glPopMatrix();
 
 
-	// ** 그리기 동작 2: 정점 배열을 이용한 나만의 탁자
-
-	// 탁자
-	glFrontFace(GL_CCW); // 내 정점 배열 그림은 CCW 로 설정
-	glVertexPointer(3, GL_FLOAT, 0, top_of_table);
-	for (GLint i = 0; i < 6; ++i) {
-		glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_BYTE, table_vlist[i]);
-	}
-	glVertexPointer(3, GL_FLOAT, 0, table_leg1);
-	for (GLint i = 0; i < 6; ++i) {
-		glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_BYTE, table_vlist[i]);
-	}
-	glVertexPointer(3, GL_FLOAT, 0, table_leg2);
-	for (GLint i = 0; i < 6; ++i) {
-		glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_BYTE, table_vlist[i]);
-	}
-	glVertexPointer(3, GL_FLOAT, 0, table_leg3);
-	for (GLint i = 0; i < 6; ++i) {
-		glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_BYTE, table_vlist[i]);
-	}
-	glVertexPointer(3, GL_FLOAT, 0, table_leg4);
-	for (GLint i = 0; i < 6; ++i) {
-		glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_BYTE, table_vlist[i]);
-	}
-	
-
-	// ** 그리기 동작 3: Autodesk Tinkercad를 이용해 그린 물체(.obj)를 import 하여 그린 눈송이 (탁자 위 물체로 이용 및 뒷 벽면 장식)
-
+	// 나무 그리기
 	glPushMatrix();
-	glScalef(0.025, 0.025, 0.025);
-	glTranslatef(15, -1.5, -10);
-	glRotatef(90, 1, 0, 0);
+	glScalef(0.02, 0.02, 0.02);
+	glTranslatef(-15, -15, 0);
+	glCallList(id_array[1]);
 
-	glCallList(snowflakeID);
-	glPopMatrix();
-	*/
-	// 뒷 벽면 장식 1
+	// 계층 구조 모델링
 	glPushMatrix();
-	glScalef(0.01, 0.01, 0.01);
-	glTranslatef(3, 20, 30);
-	glCallList(snowflakeID);
+	//glTranslatef()
+	glCallList(id_array[2]);
 	glPopMatrix();
 
-	// 뒷 벽면 장식 2
-	glPushMatrix();
-	glScalef(0.005, 0.005, 0.005);
-	glTranslatef(25, 30, 60);
-	glCallList(snowflakeID);
-	glPopMatrix();
-
-	// 뒷 벽면 장식 3
-	glPushMatrix();
-	glScalef(0.005, 0.005, 0.005);
-	glTranslatef(25, 33, 60);
-	glCallList(snowflakeID);
-	glPopMatrix();
-
-	// 뒷 벽면 장식 4
-	glPushMatrix();
-	glScalef(0.005, 0.005, 0.005);
-	glTranslatef(25, 10, 60);
-	glCallList(snowflakeID);
-	glPopMatrix();
-
-	// 뒷 벽면 장식 5
-	glPushMatrix();
-	glScalef(0.005, 0.005, 0.005);
-	glTranslatef(25, 40, 60);
-	glCallList(snowflakeID);
-	glPopMatrix();
-
-	// 뒷 벽면 장식 6
-	glPushMatrix();
-	glScalef(0.005, 0.005, 0.005);
-	glTranslatef(25, 90, 60);
-	glCallList(snowflakeID);
-	glPopMatrix();
-
-	// 뒷 벽면 장식 7
-	glPushMatrix();
-	glScalef(0.005, 0.005, 0.005);
-	glTranslatef(50, 30, 60);
-	glCallList(snowflakeID);
-	glPopMatrix();
-
-	// 뒷 벽면 장식 8
-	glPushMatrix();
-	glScalef(0.005, 0.005, 0.005);
-	glTranslatef(30, 35, 70);
-	glCallList(snowflakeID);
-	glPopMatrix();
-
-	// 뒷 벽면 장식 9
-	glPushMatrix();
-	glScalef(0.005, 0.005, 0.005);
-	glTranslatef(35, 20, 80);
-	glCallList(snowflakeID);
-	glPopMatrix();
-
-	// 뒷 벽면 장식 10
-	glPushMatrix();
-	glScalef(0.005, 0.005, 0.005);
-	glTranslatef(40, 15, 30);
-	glCallList(snowflakeID);
 	glPopMatrix();
 
 
@@ -397,19 +281,32 @@ void MyReshape(int w, int h) {
 }
 
 int main(int argc, char** argv) {
+	srand((unsigned int)time(0));
+	for (int i = 0; i < 30; ++i) {
+		snowpos[i][0] = (rand() % 2? 1: -1) * (rand() % 300);
+		snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % 250);
+		snowpos[i][2] = (rand() % 2 ? 1 : -1) * (rand() % 100);
+	}
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(windowWidth, windowHeight);
 	glutInitWindowPosition(0, 0);
 
-	glutCreateWindow("OpenGL PROJECT I 2015312229 김요섭");
-	glClearColor(0.4, 0.4, 0.4, 0.0); // Background Color를 회색으로 설정
+	glutCreateWindow("Final Project 2015312229 김요섭");
+	glClearColor(0.6, 0.6, 0.6, 0.0); // Background Color를 회색으로 설정
 
-	InitLight(); // 빛 정보 초기화
+	//glInit();
+	//InitLight(); // 빛 정보 초기화
 
 	loadObject("tinker.obj"); // 외부 모델링 데이터(.obj file) 처리를 위해 작성한 함수
-	CreateList(); // 위에서 불러온 데이터를 활용해 Display list 생성 및 컴파일 단계에서 그려지도록 설정
+	CreateList(1); // 위에서 불러온 데이터를 활용해 Display list 생성 및 컴파일 단계에서 그려지도록 설정
 
+	loadObject("treeup.obj");
+	CreateList(2);
+
+	loadObject("treedown.obj");
+	CreateList(3);
+		
 
 	// 아래에는 콜백 함수 등록
 	glutDisplayFunc(MyDisplay);
