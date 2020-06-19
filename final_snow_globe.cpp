@@ -3,6 +3,9 @@
 
 #define _CRT_SECURE_NO_WARNINGS // fscanf, fgets 사용을 위해 경고 무시하기 (Visual Studio 환경이 아닌 경우 코드를 삭제할 것)
 
+#include<windows.h>
+#include<MMSystem.h> // 소리 재생을 위한 헤더
+
 // C headers (C++ type)
 #include <cstdio>
 #include <cstdlib>
@@ -193,6 +196,7 @@ void MyDisplay() {
 	// ViewX~Z를 구하는 것은 MyMouseMove() 함수에서 수행
 	gluLookAt(0, 0, 0, ViewX, ViewY, ViewZ, 0, 1, 0);
 
+	//glFrontFace(GL_CCW);
 
 	// 나무 그리기 - 큰 나무
 	glPushMatrix();
@@ -256,29 +260,51 @@ void fallingSnow() {
 	glutPostRedisplay();
 }
 
+GLboolean isFirst = true;
 void det_snowpos() {
-	for (int i = 0; i < 30; ++i) {
-		snowpos[i][0] = (rand() % 2 ? 1 : -1) * (rand() % 300);
-		snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % 250);
-		snowpos[i][2] = (rand() % 2 ? 1 : -1) * (rand() % 100);
+	if (isFirst) {
+		for (int i = 0; i < 30; ++i) {
+			snowpos[i][0] = (rand() % 2 ? 1 : -1) * (rand() % 300);
+			snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % 250);
+			snowpos[i][2] = (rand() % 2 ? 1 : -1) * (rand() % 100);
+		}
+		isFirst = false;
 	}
+	else {
+		for (int i = 0; i < 30; ++i) {
+			snowpos[i][1] += (rand() % 50);
+		}
+	}
+}
+
+void snow_globe_init() {
+	sndPlaySound(TEXT("C:\\셀바이뮤직-바흐_골드베르크연주곡주제"), SND_ASYNC | SND_NOSTOP);
+	/*	음악의 크레딧 - 아래의 주소에서 다운로드 받음
+		
+		바흐 : 골드베르크 연주곡 주제 by 셀바이뮤직
+
+		Download / Stream 
+		- https://www.sellbuymusic.com/musicDetail/8311
+
+	*/
 }
 
 int main(int argc, char** argv) {
 	srand((unsigned int)time(0));
 	det_snowpos();
+	snow_globe_init();
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(windowWidth, windowHeight);
 	glutInitWindowPosition(0, 0);
 
-	glutCreateWindow("Final Project 2015312229 김요섭");
+	glutCreateWindow("Final Project :: Snow Globe by Yoseob Kim, 2015312229");
 	glClearColor(0.6, 0.6, 0.6, 0.0); // Background Color를 회색으로 설정
 
 	//glInit();
 	//InitLight(); // 빛 정보 초기화
 
-	loadObject("tinker.obj"); // 외부 모델링 데이터(.obj file) 처리를 위해 작성한 함수
+	loadObject("snow.obj"); // 외부 모델링 데이터(.obj file) 처리를 위해 작성한 함수
 	CreateList(1); // 위에서 불러온 데이터를 활용해 Display list 생성 및 컴파일 단계에서 그려지도록 설정
 
 	loadObject("treeup.obj");
