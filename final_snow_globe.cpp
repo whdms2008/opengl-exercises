@@ -160,61 +160,24 @@ void MyMouseMove(GLint X, GLint Y) {
 	}
 }
 
+void det_snowpos();
+
+GLfloat delta;
 void MyKeyboard(unsigned char key, int x, int y) {
 	switch (key) {
 	case 'q': case 'Q': case '\033': // esc key
 		exit(0);
 		break;
 
-	case 's': case 'S': // s 혹은 S 키를 누르면 Flat <-> Shaded 상태 Toggle
-		if (FlatShaded) {
-			FlatShaded = 0;
-			glShadeModel(GL_SMOOTH);
-		}
-		else {
-			FlatShaded = 1;
-			glShadeModel(GL_FLAT);
-		}
-		glutPostRedisplay();
-		break;
-
-	case 'w': case 'W': // w 혹은 W 키를 누르면 Solid <-> WireFrame 상태 Toggle
-		if (WireFramed) {
-			WireFramed = 0;
-		}
-		else {
-			WireFramed = 1;
-		}
-		glutPostRedisplay();
+	case 'r': case 'R':
+		det_snowpos();
+		delta = 0.0f;
 		break;
 	}
 }
 
+GLfloat snowpos[30][3];
 
-// ** 탁자에 관련된 정보들
-
-GLfloat tableSize = 0.6, legSize = 0.1;
-GLfloat tableUpperPos = -0.1;
-GLfloat tableLowerPos = -0.15;
-GLfloat tableBottomPos = -0.5;
-GLfloat top_of_table[8][3] = { {-tableSize, tableUpperPos, tableSize}, { tableSize, tableUpperPos, tableSize }, { tableSize, tableUpperPos, -tableSize }, { -tableSize, tableUpperPos, -tableSize },
-								{-tableSize, tableLowerPos, tableSize}, { tableSize, tableLowerPos, tableSize }, { tableSize, tableLowerPos, -tableSize }, { -tableSize, tableLowerPos, -tableSize } };
-GLfloat table_leg1[8][3] = { {-tableSize, tableLowerPos, tableSize}, {-tableSize + legSize, tableLowerPos, tableSize}, {-tableSize + legSize, tableLowerPos, tableSize - legSize}, {-tableSize, tableLowerPos, tableSize - legSize},
-								{-tableSize, tableBottomPos, tableSize}, {-tableSize + legSize, tableBottomPos, tableSize}, {-tableSize + legSize, tableBottomPos, tableSize - legSize}, {-tableSize, tableBottomPos, tableSize - legSize} };
-GLfloat table_leg2[8][3] = { {tableSize - legSize, tableLowerPos, tableSize}, {tableSize, tableLowerPos, tableSize}, {tableSize, tableLowerPos, tableSize - legSize}, {tableSize - legSize, tableLowerPos, tableSize - legSize},
-								{tableSize - legSize, tableBottomPos, tableSize}, {tableSize, tableBottomPos, tableSize}, {tableSize, tableBottomPos, tableSize - legSize}, {tableSize - legSize, tableBottomPos, tableSize - legSize} };
-GLfloat table_leg3[8][3] = { {tableSize - legSize, tableLowerPos, -tableSize + legSize}, {tableSize, tableLowerPos, -tableSize + legSize}, {tableSize, tableLowerPos, -tableSize}, {tableSize - legSize, tableLowerPos, -tableSize},
-								{tableSize - legSize, tableBottomPos, -tableSize + legSize}, {tableSize, tableBottomPos, -tableSize + legSize}, {tableSize, tableBottomPos, -tableSize}, {tableSize - legSize, tableBottomPos, -tableSize} };
-GLfloat table_leg4[8][3] = { {-tableSize, tableLowerPos, -tableSize + legSize}, {-tableSize + legSize, tableLowerPos, -tableSize + legSize}, {-tableSize + legSize, tableLowerPos, -tableSize}, {-tableSize, tableLowerPos, -tableSize},
-								{-tableSize, tableBottomPos, -tableSize + legSize}, {-tableSize + legSize, tableBottomPos, -tableSize + legSize}, {-tableSize + legSize, tableBottomPos, -tableSize}, {-tableSize, tableBottomPos, -tableSize} };
-
-// 테이블의 윗판 (앞 4개의 정점은 윗판의 윗면, 뒤 4개의 정점은 윗판의 아랫면)
-/*GLfloat table_color[8][3] = {	{0xe9 / 255.0, 0xec / 255.0, 0xef / 255.0}, {0xde / 255.0, 0xe2 / 255.0, 0xe6 / 255.0}, {0xce / 255.0, 0xd4 / 255.0, 0xda / 255.0}, {0xad / 255.0, 0xb5 / 255.0, 0xbd / 255.0},
-								{0x86 / 255.0, 0x8e / 255.0, 0x96 / 255.0}, {0x49 / 255.0, 0x50 / 255.0, 0x57 / 255.0}, {0x34 / 255.0, 0x3a / 255.0, 0x40 / 255.0}, {0x21 / 255.0, 0x25 / 255.0, 0x29 / 255.0} };*/
-GLubyte table_vlist[][4] = { {0, 4, 5, 1}, {1, 5, 6, 2}, {4, 7, 6, 5}, {0, 1, 2, 3}, {7, 3, 2, 6}, {4, 0, 3, 7} }; // 교재와 조금 다름 (내 그림은 윗면 - 아랫면 순)
-
-
-GLint snowpos[30][3];
 void MyDisplay() {
 	glViewport(0, 0, windowWidth, windowHeight);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -231,16 +194,7 @@ void MyDisplay() {
 	gluLookAt(0, 0, 0, ViewX, ViewY, ViewZ, 0, 1, 0);
 
 
-	// 눈 송이 30개 호출
-	for (int i = 0; i < 30; ++i) {
-		glPushMatrix();
-		glScalef(0.004, 0.004, 0.004);
-		glTranslatef(snowpos[i][0], snowpos[i][1], snowpos[i][2]);
-		glCallList(id_array[0]);
-		glPopMatrix();
-	}
-
-	// 나무 그리기
+	// 나무 그리기 - 큰 나무
 	glPushMatrix();
 	glScalef(0.04, 0.04, 0.04);
 	glTranslatef(8, 3, 0);
@@ -255,7 +209,17 @@ void MyDisplay() {
 	glPopMatrix();
 
 
-	// 나무 그리기
+	// 눈 송이 30개 호출
+	for (int i = 0; i < 30; ++i) {
+		glPushMatrix();
+		glScalef(0.004, 0.004, 0.004);
+		glTranslatef(snowpos[i][0], snowpos[i][1], snowpos[i][2]);
+		glCallList(id_array[0]);
+		glPopMatrix();
+	}
+
+
+	// 나무 그리기 - 작은 나무
 	glPushMatrix();
 	glScalef(0.02, 0.02, 0.02);
 	glTranslatef(-15, -15, 0);
@@ -269,8 +233,8 @@ void MyDisplay() {
 
 	glPopMatrix();
 
-
-	glFlush();
+	//glFlush();
+	glutSwapBuffers();
 }
 
 void MyReshape(int w, int h) {
@@ -280,15 +244,31 @@ void MyReshape(int w, int h) {
 	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
 }
 
-int main(int argc, char** argv) {
-	srand((unsigned int)time(0));
+void fallingSnow() {
+	delta += 0.0003;
+
 	for (int i = 0; i < 30; ++i) {
-		snowpos[i][0] = (rand() % 2? 1: -1) * (rand() % 300);
+		if (snowpos[i][1] > -240.0f) {
+			snowpos[i][1] -= delta;
+		}
+	}
+
+	glutPostRedisplay();
+}
+
+void det_snowpos() {
+	for (int i = 0; i < 30; ++i) {
+		snowpos[i][0] = (rand() % 2 ? 1 : -1) * (rand() % 300);
 		snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % 250);
 		snowpos[i][2] = (rand() % 2 ? 1 : -1) * (rand() % 100);
 	}
+}
+
+int main(int argc, char** argv) {
+	srand((unsigned int)time(0));
+	det_snowpos();
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(windowWidth, windowHeight);
 	glutInitWindowPosition(0, 0);
 
@@ -314,6 +294,7 @@ int main(int argc, char** argv) {
 	glutMouseFunc(MyMouseClick); // 클릭하였을 때
 	glutMotionFunc(MyMouseMove); // 마우스를 움직일 때, ViewX~Z 값을 조정
 	glutReshapeFunc(MyReshape);
+	glutIdleFunc(fallingSnow); // 눈송이가 떨어지는 장면 묘사
 
 	glutMainLoop();
 	return 0;
