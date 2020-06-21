@@ -222,6 +222,16 @@ void MyDisplay() {
 	
 	//glFrontFace(GL_CCW);
 
+	glPushMatrix(); // 번외
+
+	glColor3f(0, 1, 0);
+	glScalef(0.003, 0.003, 0.003);
+	glRotatef(180, 0, 1, 0);
+	glTranslatef(10, 110, 0);
+	glCallList(id_array[3]);
+
+	glPopMatrix(); // 번외 e
+
 	if (!inView) {
 		glPushMatrix(); // 1
 		glEnable(GL_BLEND);
@@ -450,6 +460,9 @@ int main(int argc, char** argv) {
 
 	loadObject("treedown.obj");
 	CreateList(3);
+
+	loadObject("myname.obj");
+	CreateList(4);
 		
 
 	// 아래에는 콜백 함수 등록
