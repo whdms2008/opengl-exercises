@@ -197,11 +197,13 @@ void MyDisplay() {
 	gluLookAt(0, 0, 0, ViewX, ViewY, ViewZ, 0, 1, 0);
 	std::cout << "ViewX: " << ViewX << " View Y: " << ViewY << " View Z: " << ViewZ << std::endl;
 
-
+	
 	//glFrontFace(GL_CCW);
-
+	glPushMatrix();
+	glEnable(GL_BLEND);
 	// 나무 그리기 - 큰 나무
 	glPushMatrix();
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glScalef(0.04, 0.04, 0.04);
 	glTranslatef(8, 3, 0);
 	if (ViewY > 0) {
@@ -225,7 +227,7 @@ void MyDisplay() {
 	glPopMatrix();
 
 
-
+	
 	// 눈 송이 30개 호출
 	for (int i = 0; i < 30; ++i) {
 		glPushMatrix();
@@ -266,10 +268,6 @@ void MyDisplay() {
 	glPopMatrix();
 
 	//glFlush();
-	/*
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	*/
 
 
 	glEnable(GL_LIGHTING);
@@ -283,7 +281,15 @@ void MyDisplay() {
 	glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
 
 
-	//glutSolidSphere(0.8, 50, 15);
+	glPushMatrix();
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glColor4f(0.9, 0.9, 0.9, 0.5);
+	glutSolidSphere(0.8, 50, 15);
+
+	glPopMatrix();
+	glDisable(GL_BLEND);
+	glPopMatrix();
+
 
 	glutSwapBuffers();
 }
