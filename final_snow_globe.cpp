@@ -183,9 +183,13 @@ void MyKeyboard(unsigned char key, int x, int y) {
 		break;
 
 	case 'd': case 'D': // Dark Mode
-		isDark = !isDark;
+		isDark = true;
+		break;
+	case 'w': case 'W': // White Mode
+		isDark = false;
 		break;
 	}
+	glutPostRedisplay();
 }
 
 const int max_snow = 100;
@@ -330,7 +334,6 @@ void MyDisplay() {
 	}*/
 
 	
-	
 	glPopMatrix(); // 0 e
 
 	glutSwapBuffers();
@@ -429,6 +432,30 @@ void snow_globe_init() {
 	*/
 }
 
+void mainMenu(int entryID) {
+	switch (entryID) {
+	case 1: // Mode 관련
+		break;
+	case 2: // Shaking
+		det_snowpos();
+		delta = 0.0f;
+		break;
+	case 3:
+		exit(0);
+		break;
+	}
+}
+
+void subMode(int entryID) {
+	if (entryID == 1) {
+		isDark = true;
+	}
+	else {
+		isDark = false;
+	}
+	glutPostRedisplay();
+}
+
 int main(int argc, char** argv) {
 	srand((unsigned int)time(0));
 	det_snowpos();
@@ -438,7 +465,7 @@ int main(int argc, char** argv) {
 	glutInitWindowSize(windowWidth, windowHeight);
 	glutInitWindowPosition(0, 0);
 
-	glutCreateWindow("Final Project :: Snow Globe by Yoseob Kim, 2015312229");
+	glutCreateWindow("Snow Globe by Yoseob Kim");
 	glClearColor(0.7, 0.7, 0.7, 0.0); // Background Color를 회색으로 설정
 
 	//glInit();
@@ -463,6 +490,16 @@ int main(int argc, char** argv) {
 
 	loadObject("myname.obj");
 	CreateList(4);
+
+	GLint subModeID = glutCreateMenu(subMode);
+	glutAddMenuEntry("다크 모드 (D)", 1);
+	glutAddMenuEntry("일반 모드 (W)", 2);
+
+	GLint mainMenuID = glutCreateMenu(mainMenu);
+	glutAddSubMenu("모드 설정", subModeID);
+	glutAddMenuEntry("스노우 글로브 흔들기 (S)", 2);
+	glutAddMenuEntry("종료 (Q)", 3);
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
 		
 
 	// 아래에는 콜백 함수 등록
