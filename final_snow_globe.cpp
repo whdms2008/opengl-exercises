@@ -341,6 +341,8 @@ void MyDisplay() {
 
 void MyReshape(int w, int h) {
 	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+	windowWidth = w;
+	windowHeight = h;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
@@ -463,7 +465,7 @@ int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(windowWidth, windowHeight);
-	glutInitWindowPosition(0, 0);
+	glutInitWindowPosition(50, 50);
 
 	glutCreateWindow("Snow Globe by Yoseob Kim");
 	glClearColor(0.7, 0.7, 0.7, 0.0); // Background Color를 회색으로 설정
