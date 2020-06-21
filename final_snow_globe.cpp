@@ -195,6 +195,8 @@ void MyDisplay() {
 	// 카메라의 위치는 원점에 두고, 물체를 x^2+y^2+z^2=1 (반지름이 1인 구)를 기준으로 회전시킴
 	// ViewX~Z를 구하는 것은 MyMouseMove() 함수에서 수행
 	gluLookAt(0, 0, 0, ViewX, ViewY, ViewZ, 0, 1, 0);
+	std::cout << "ViewX: " << ViewX << " View Y: " << ViewY << " View Z: " << ViewZ << std::endl;
+
 
 	//glFrontFace(GL_CCW);
 
@@ -202,15 +204,26 @@ void MyDisplay() {
 	glPushMatrix();
 	glScalef(0.04, 0.04, 0.04);
 	glTranslatef(8, 3, 0);
-	glCallList(id_array[1]);
+	if (ViewY > 0) {
+		glCallList(id_array[1]);
+	}
+	else {
+		glCallList(id_array[2]);
+	}
 
 	// 계층 구조 모델링
 	glPushMatrix();
 	//glTranslatef()
-	glCallList(id_array[2]);
+	if (ViewY > 0) {
+		glCallList(id_array[2]);
+	}
+	else {
+		glCallList(id_array[1]);
+	}
 	glPopMatrix();
 
 	glPopMatrix();
+
 
 
 	// 눈 송이 30개 호출
@@ -227,17 +240,51 @@ void MyDisplay() {
 	glPushMatrix();
 	glScalef(0.02, 0.02, 0.02);
 	glTranslatef(-15, -15, 0);
-	glCallList(id_array[1]);
+	//glCallList(id_array[1]);
+
+	if (ViewY > 0) {
+		glCallList(id_array[1]);
+	}
+	else {
+		glCallList(id_array[2]);
+	}
 
 	// 계층 구조 모델링
 	glPushMatrix();
 	//glTranslatef()
-	glCallList(id_array[2]);
+	//glCallList(id_array[2]);
+
+
+	if (ViewY > 0) {
+		glCallList(id_array[2]);
+	}
+	else {
+		glCallList(id_array[1]);
+	}
 	glPopMatrix();
 
 	glPopMatrix();
 
 	//glFlush();
+	/*
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	*/
+
+
+	glEnable(GL_LIGHTING);
+
+	glEnable(GL_LIGHT0);
+
+	glEnable(GL_COLOR_MATERIAL);
+
+	GLfloat lightpos[] = { 1.06-ViewX, 1.06-ViewY, 1.06-ViewZ, 1.2 };
+
+	glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
+
+
+	//glutSolidSphere(0.8, 50, 15);
+
 	glutSwapBuffers();
 }
 
@@ -266,7 +313,7 @@ void det_snowpos() {
 		for (int i = 0; i < 30; ++i) {
 			snowpos[i][0] = (rand() % 2 ? 1 : -1) * (rand() % 300);
 			snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % 250);
-			snowpos[i][2] = (rand() % 2 ? 1 : -1) * (rand() % 100);
+			snowpos[i][2] = (rand() % 2 ? 1 : -1) * (rand() % 15);
 		}
 		isFirst = false;
 	}
