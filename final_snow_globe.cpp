@@ -38,7 +38,7 @@ void CreateList(int param) { // .obj ÆÄÀÏ¿¡¼­ ÆÄ½ÌÇØ ¿Â Á¤Á¡ ¹è¿­À» ÀÌ¿ëÇØ µð½ºÇ
 		glBegin(GL_TRIANGLES); // ÀÌ¸¦ ÀÌ¿ëÇÏ±â À§ÇÑ GL_TRIANGLES
 
 		if (param == 1) {
-			glColor3f(1.0, 1.0, 1.0); // »ö»óÀº ÇÏ¾á »öÀ¸·Î ÃÊ±âÈ­ (Æ¯º°ÇÑ ÀÇ¹Ì ¾øÀ½)
+			glColor3f(1.0, 1.0, 1.0); // »ö»óÀº ÇÏ¾á »öÀ¸·Î ÃÊ±âÈ­ (´«)
 		}
 		else if (param == 2) {
 			glColor3f(0.0, 0.5, 0.0);
@@ -166,7 +166,8 @@ void MyMouseMove(GLint X, GLint Y) {
 void det_snowpos();
 
 GLfloat delta;
-GLboolean out_view = true;
+GLboolean inView = false;
+GLboolean isDark = false;
 void MyKeyboard(unsigned char key, int x, int y) {
 	switch (key) {
 	case 'q': case 'Q': case '\033': // esc key
@@ -178,7 +179,11 @@ void MyKeyboard(unsigned char key, int x, int y) {
 		delta = 0.0f;
 		break;
 	case 'v': case 'V': // Change View
-		out_view = !out_view;
+		//inView = !inView;
+		break;
+
+	case 'd': case 'D': // Dark Mode
+		isDark = !isDark;
 		break;
 	}
 }
@@ -188,7 +193,13 @@ GLfloat snowpos[max_snow][3];
 
 void MyDisplay() {
 	glViewport(0, 0, windowWidth, windowHeight);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+	if (isDark) {
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	}
+	else {
+		glClearColor(0.7f, 0.7f, 0.7f, 0.0f);
+	}
 
 	glEnable(GL_CULL_FACE);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -206,18 +217,19 @@ void MyDisplay() {
 
 	GLfloat lightpos[] = { 1.06 - ViewX, 1.06 - ViewY, 1.06 - ViewZ, 1.2 };
 
-	glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
+	//glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
+	glLightModelfv(GL_POSITION, lightpos);
 	
 	//glFrontFace(GL_CCW);
 
-	if (!out_view) {
+	if (!inView) {
 		glPushMatrix(); // 1
 		glEnable(GL_BLEND);
 
 		glPushMatrix(); // 2
 		glScalef(0.75, 0.75, 0.75);
 
-		glPushMatrix(); // 3
+		//glPushMatrix(); // 3
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
@@ -288,11 +300,11 @@ void MyDisplay() {
 
 	//glFlush();
 
-	if (!out_view) {
+	if (!inView) {
 		
-		glPopMatrix(); // 3 e
+		//glPopMatrix(); // 3 e
 
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glPopMatrix(); // 2 e
 
@@ -303,7 +315,7 @@ void MyDisplay() {
 		glPopMatrix(); // 1 e
 	}
 
-	/*if (!out_view) {
+	/*if (!inView) {
 		glPopMatrix();
 	}*/
 
@@ -377,7 +389,7 @@ void det_snowpos() {
 			else /*if (abs(snowpos[i][0]) < 200.0f)*/ {
 				snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % int(-snowpos_crit[6][1]));
 			}
-			snowpos[i][2] = (rand() % 2 ? 1 : -1) * (rand() % 15);
+			snowpos[i][2] = (rand() % 2 ? 1 : -1) * (rand() % 80);
 		}
 		isFirst = false;
 	}
