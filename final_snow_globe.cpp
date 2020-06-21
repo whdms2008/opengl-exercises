@@ -166,20 +166,25 @@ void MyMouseMove(GLint X, GLint Y) {
 void det_snowpos();
 
 GLfloat delta;
+GLboolean out_view = true;
 void MyKeyboard(unsigned char key, int x, int y) {
 	switch (key) {
 	case 'q': case 'Q': case '\033': // esc key
 		exit(0);
 		break;
 
-	case 'r': case 'R':
+	case 's': case 'S': // Shake
 		det_snowpos();
 		delta = 0.0f;
+		break;
+	case 'v': case 'V': // Change View
+		out_view = !out_view;
 		break;
 	}
 }
 
-GLfloat snowpos[30][3];
+const int max_snow = 100;
+GLfloat snowpos[max_snow][3];
 
 void MyDisplay() {
 	glViewport(0, 0, windowWidth, windowHeight);
@@ -195,15 +200,29 @@ void MyDisplay() {
 	// 카메라의 위치는 원점에 두고, 물체를 x^2+y^2+z^2=1 (반지름이 1인 구)를 기준으로 회전시킴
 	// ViewX~Z를 구하는 것은 MyMouseMove() 함수에서 수행
 	gluLookAt(0, 0, 0, ViewX, ViewY, ViewZ, 0, 1, 0);
-	std::cout << "ViewX: " << ViewX << " View Y: " << ViewY << " View Z: " << ViewZ << std::endl;
+	//std::cout << "ViewX: " << ViewX << " View Y: " << ViewY << " View Z: " << ViewZ << std::endl;
 
+	glPushMatrix(); // 0
+
+	GLfloat lightpos[] = { 1.06 - ViewX, 1.06 - ViewY, 1.06 - ViewZ, 1.2 };
+
+	glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
 	
 	//glFrontFace(GL_CCW);
-	glPushMatrix();
-	glEnable(GL_BLEND);
+
+	if (!out_view) {
+		glPushMatrix(); // 1
+		glEnable(GL_BLEND);
+
+		glPushMatrix(); // 2
+		glScalef(0.75, 0.75, 0.75);
+
+		glPushMatrix(); // 3
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
+
 	// 나무 그리기 - 큰 나무
-	glPushMatrix();
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glPushMatrix(); // 4
 	glScalef(0.04, 0.04, 0.04);
 	glTranslatef(8, 3, 0);
 	if (ViewY > 0) {
@@ -214,7 +233,7 @@ void MyDisplay() {
 	}
 
 	// 계층 구조 모델링
-	glPushMatrix();
+	glPushMatrix(); // 5
 	//glTranslatef()
 	if (ViewY > 0) {
 		glCallList(id_array[2]);
@@ -222,24 +241,24 @@ void MyDisplay() {
 	else {
 		glCallList(id_array[1]);
 	}
-	glPopMatrix();
+	glPopMatrix(); // 5 e
 
-	glPopMatrix();
+	glPopMatrix(); // 4 e
 
 
 	
-	// 눈 송이 30개 호출
-	for (int i = 0; i < 30; ++i) {
-		glPushMatrix();
+	// 눈 송이 max_snow개 호출
+	for (int i = 0; i < max_snow; ++i) {
+		glPushMatrix(); // 4
 		glScalef(0.004, 0.004, 0.004);
 		glTranslatef(snowpos[i][0], snowpos[i][1], snowpos[i][2]);
 		glCallList(id_array[0]);
-		glPopMatrix();
+		glPopMatrix(); // 4 e
 	}
 
 
 	// 나무 그리기 - 작은 나무
-	glPushMatrix();
+	glPushMatrix(); // 4
 	glScalef(0.02, 0.02, 0.02);
 	glTranslatef(-15, -15, 0);
 	//glCallList(id_array[1]);
@@ -252,7 +271,7 @@ void MyDisplay() {
 	}
 
 	// 계층 구조 모델링
-	glPushMatrix();
+	glPushMatrix(); // 5
 	//glTranslatef()
 	//glCallList(id_array[2]);
 
@@ -263,33 +282,34 @@ void MyDisplay() {
 	else {
 		glCallList(id_array[1]);
 	}
-	glPopMatrix();
+	glPopMatrix(); // 5 e
 
-	glPopMatrix();
+	glPopMatrix(); // 4 e
 
 	//glFlush();
 
+	if (!out_view) {
+		
+		glPopMatrix(); // 3 e
 
-	glEnable(GL_LIGHTING);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glEnable(GL_LIGHT0);
+		glPopMatrix(); // 2 e
 
-	glEnable(GL_COLOR_MATERIAL);
+		glColor4f(1, 1, 1, 0.25);
+		glutSolidSphere(0.8, 50, 15);
 
-	GLfloat lightpos[] = { 1.06-ViewX, 1.06-ViewY, 1.06-ViewZ, 1.2 };
+		glDisable(GL_BLEND);
+		glPopMatrix(); // 1 e
+	}
 
-	glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
+	/*if (!out_view) {
+		glPopMatrix();
+	}*/
 
-
-	glPushMatrix();
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glColor4f(0.9, 0.9, 0.9, 0.5);
-	glutSolidSphere(0.8, 50, 15);
-
-	glPopMatrix();
-	glDisable(GL_BLEND);
-	glPopMatrix();
-
+	
+	
+	glPopMatrix(); // 0 e
 
 	glutSwapBuffers();
 }
@@ -301,11 +321,28 @@ void MyReshape(int w, int h) {
 	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
 }
 
-void fallingSnow() {
-	delta += 0.0003;
+GLfloat snowpos_crit[][2] = {
+	{70.0f, -240.0f},
+	{90.0f, -225.0f},
+	{120.0f, -210.0f},
+	{140.0f, -195.0f},
+	{160.0f, -180.0f},
+	{180.0f, -165.0f},
+	{200.0f, -140.0f},
+};
 
-	for (int i = 0; i < 30; ++i) {
-		if (snowpos[i][1] > -240.0f) {
+void fallingSnow() {
+	delta += 0.001;
+	//delta += 0.03; // 100배속
+
+	for (int i = 0; i < max_snow; ++i) {
+		if (abs(snowpos[i][0]) < snowpos_crit[0][0] && snowpos[i][1] > snowpos_crit[0][1] ||
+			abs(snowpos[i][0]) < snowpos_crit[1][0] && snowpos[i][1] > snowpos_crit[1][1] ||
+			abs(snowpos[i][0]) < snowpos_crit[2][0] && snowpos[i][1] > snowpos_crit[2][1] ||
+			abs(snowpos[i][0]) < snowpos_crit[3][0] && snowpos[i][1] > snowpos_crit[3][1] ||
+			abs(snowpos[i][0]) < snowpos_crit[4][0] && snowpos[i][1] > snowpos_crit[4][1] ||
+			abs(snowpos[i][0]) < snowpos_crit[5][0] && snowpos[i][1] > snowpos_crit[5][1] ||
+			abs(snowpos[i][0]) < snowpos_crit[6][0] && snowpos[i][1] > snowpos_crit[6][1]) {
 			snowpos[i][1] -= delta;
 		}
 	}
@@ -313,19 +350,47 @@ void fallingSnow() {
 	glutPostRedisplay();
 }
 
+
 GLboolean isFirst = true;
 void det_snowpos() {
 	if (isFirst) {
-		for (int i = 0; i < 30; ++i) {
-			snowpos[i][0] = (rand() % 2 ? 1 : -1) * (rand() % 300);
-			snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % 250);
+		for (int i = 0; i < max_snow; ++i) {
+			snowpos[i][0] = (rand() % 2 ? 1 : -1) * (rand() % 200);
+			if (abs(snowpos[i][0]) < snowpos_crit[0][0]) {
+				snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % int(-snowpos_crit[0][1]));
+			}
+			else if (abs(snowpos[i][0]) < snowpos_crit[1][0]) {
+				snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % int(-snowpos_crit[1][1]));
+			}
+			else if (abs(snowpos[i][0]) < snowpos_crit[2][0]) {
+				snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % int(-snowpos_crit[2][1]));
+			}
+			else if (abs(snowpos[i][0]) < snowpos_crit[3][0]) {
+				snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % int(-snowpos_crit[3][1]));
+			}
+			else if (abs(snowpos[i][0]) < snowpos_crit[4][0]) {
+				snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % int(-snowpos_crit[4][1]));
+			}
+			else if (abs(snowpos[i][0]) < snowpos_crit[5][0]) {
+				snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % int(-snowpos_crit[5][1]));
+			}
+			else /*if (abs(snowpos[i][0]) < 200.0f)*/ {
+				snowpos[i][1] = (rand() % 2 ? 1 : -1) * (rand() % int(-snowpos_crit[6][1]));
+			}
 			snowpos[i][2] = (rand() % 2 ? 1 : -1) * (rand() % 15);
 		}
 		isFirst = false;
 	}
 	else {
-		for (int i = 0; i < 30; ++i) {
-			snowpos[i][1] += (rand() % 50);
+		for (int i = 0; i < max_snow; ++i) {
+			for (int j = 0; j < 7; ++j) {
+				if(abs(snowpos[i][0]) < snowpos_crit[j][0]){
+					if (snowpos[i][1] < -snowpos_crit[j][1] - 30) {
+						snowpos[i][1] += (rand() % 50);
+						break;
+					}
+				}
+			}
 		}
 	}
 }
@@ -352,10 +417,18 @@ int main(int argc, char** argv) {
 	glutInitWindowPosition(0, 0);
 
 	glutCreateWindow("Final Project :: Snow Globe by Yoseob Kim, 2015312229");
-	glClearColor(0.6, 0.6, 0.6, 0.0); // Background Color를 회색으로 설정
+	glClearColor(0.7, 0.7, 0.7, 0.0); // Background Color를 회색으로 설정
 
 	//glInit();
 	//InitLight(); // 빛 정보 초기화
+
+
+	glEnable(GL_LIGHTING);
+
+	glEnable(GL_LIGHT0);
+
+	glEnable(GL_COLOR_MATERIAL);
+
 
 	loadObject("snow.obj"); // 외부 모델링 데이터(.obj file) 처리를 위해 작성한 함수
 	CreateList(1); // 위에서 불러온 데이터를 활용해 Display list 생성 및 컴파일 단계에서 그려지도록 설정
